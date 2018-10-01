@@ -1,6 +1,6 @@
 import pandas as pd
 
-def getDummiesFromDefectos(dataSetToDummieDataFrame):
+def getDummiesFromDefectos(dataSetToDummieDataFrame):    
     return pd.get_dummies(columns=['Business Impact','Automatic Defect'],data=dataSetToDummieDataFrame)
 
 

@@ -19,8 +19,7 @@ def process(Direccion,baseDataFrame):
 
     sprintNumber=getNextSprintNumber(baseDataFrame)
     DataFrameToAppend=baseDataFrame.drop(baseDataFrame.index, inplace=False)
-    AppendedDataFrame = baseDataFrame.append(DataFrameToAppend, ignore_index=True)
-
+    AppendedDataFrame = baseDataFrame.append(DataFrameToAppend, ignore_index=True)    
     defectosDataFrames=folderPathToDataFrames(defectosFiles)
     casosPruebasDataFrames=folderPathToDataFrames(casosPruebaFiles)
 
