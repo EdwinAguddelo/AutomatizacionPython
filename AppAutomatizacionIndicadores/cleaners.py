@@ -1,6 +1,6 @@
 import pandas as pd
 
-def getDummiesFromDefectos(dataSetToDummieDataFrame):    
+def getDummiesFromDefectos(dataSetToDummieDataFrame):
     return pd.get_dummies(columns=['Business Impact','Automatic Defect'],data=dataSetToDummieDataFrame)
 
 
@@ -38,7 +38,7 @@ def cleanCasosPruebaDataFrame(casosPruebaDataFrame,consolidado):
 
     casoPruebaCanalesDataFrame=[]
     for idx, val in enumerate(releasesDataFrame):
-        if consolidado=='Transformacion': casoPruebaCanalesDataFrame.append('{} {}'.format(val.split('_')[0],nombresDeAplicativo[idx]))
+        if consolidado=='Transformacion': casoPruebaCanalesDataFrame.append('{}'.format(nombresDeAplicativo[idx]))
         elif consolidado=='Soporte': casoPruebaCanalesDataFrame.append('{}'.format(nombresDeAplicativo[idx]))
 
     if not len(casoPruebaCanalesDataFrame): casoPruebaCanalesDataFrame.append('')

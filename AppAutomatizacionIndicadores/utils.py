@@ -1,6 +1,9 @@
 def getNextSprintNumber(baseDataSet):
     return (max(baseDataSet['SPRINT'].tolist())+1)
 
+def getNextSprintNumberUpdate(baseDataSet):
+    return (max(baseDataSet['SPRINT'].tolist()))
+
 def getAppsToRows(listaCasosPruebaSumadosDataset,listaDefectosSumadosDataset):
 
     listaAppsCasosPrueba=listaCasosPruebaSumadosDataset.index.tolist()
@@ -13,4 +16,3 @@ def getAppsToRows(listaCasosPruebaSumadosDataset,listaDefectosSumadosDataset):
                 toAggregate.remove(appDefectos)
     total=total+toAggregate
     return total
-

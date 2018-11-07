@@ -11,6 +11,7 @@ class StartJoins():
 
         self.dataframesCasosPrueba = buildDtf(self.filesCasosPrueba,'Query1')
         self.dataframesDefectos = buildDtf(self.filesDefectos,'Sheet1')
+        self.dataframesofDefectos = eliminateFields(self.dataframesDefectos)
 
     def getfileDefectos(self):
         return self.filesDefectos
@@ -28,7 +29,7 @@ class StartJoins():
 
     def mergeDefectos(self):
         dtfDefectos = []
-        for dtFrame in self.dataframesDefectos:
+        for dtFrame in self.dataframesofDefectos:
             dtFrame = dtFrame.merge(self.backupDataSet,left_on='Detected By',right_on='USUARIO',how='inner')
             dtFrame = dtFrame.drop(columns=['USUARIO'])
             dtfDefectos.append(dtFrame)

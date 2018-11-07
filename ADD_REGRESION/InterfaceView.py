@@ -1,7 +1,8 @@
 from tkinter import *
 from tkinter import filedialog
-from process import processFinal,pathConstructor
-from pathFiles import *
+import DesignStart
+import setupPathFiles
+import process
 class Application():
     def __init__(self, master):
         frame = Frame(master,width=3000,height=3000)
@@ -29,23 +30,18 @@ class Application():
 
     def start(self):
      if self.logFilePath.get():
-        paths=pathFiles(self.logFilePath.get())
-        pathConstructor(paths)
-        processFinal()
+        paths=setupPathFiles.setupPaths(self.logFilePath.get())
+        dgs = DesignStart.DesignStart(paths)
+        process.startProcess(dgs)
 
      else:
         self.logFilePathMessage.set("Seleccione la Carpeta Resources")
 
 
-
-
-
-
-
 if __name__=="__main__":
 
     root = Tk()
-    root.title("Indicadores Procesos")
+    root.title("Match team(trans.,soporte)")
     root.geometry("500x400+410+180")
     root.grid_anchor(anchor="nw")
     app = Application(root)

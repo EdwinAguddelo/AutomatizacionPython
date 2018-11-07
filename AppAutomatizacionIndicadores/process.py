@@ -1,7 +1,8 @@
 import pandas as pd
+import os
 #from pathFiles import defectosFiles,casosPruebaFiles,transformacionFilePath,soporteFilePath
 from cleaners import *
-from utils import getAppsToRows,getNextSprintNumber
+from utils import getAppsToRows,getNextSprintNumber,getNextSprintNumberUpdate
 from rowModel import TransformacionRow,rowFeeder
 from folderFilesToDataFrame import *
 from dataWrangling import defectosDataWrangling,casosPruebaDataWrangling
@@ -9,39 +10,58 @@ from dataWrangling import defectosDataWrangling,casosPruebaDataWrangling
 global defectosFiles,casosPruebaFiles,transformacionFilePath,soporteFilePath
 
 def pathConstructor(paths):
-    global defectosFiles,casosPruebaFiles,transformacionFilePath,soporteFilePath
+    global defectosFiles,casosPruebaFiles,transformacionFilePath,soporteFilePath,resourcesFiles,pittsFilePath
     defectosFiles=paths.defectosFiles
     casosPruebaFiles=paths.casosPruebaFiles
     transformacionFilePath=paths.transformacionFilePath
     soporteFilePath=paths.soporteFilePath
+    resourcesFiles = paths.resourcesPath
+    pittsFilePath = paths.pittsFilePath
 
-def process(Direccion,baseDataFrame):
+def process(Direccion,baseDataFrame,sprintNumber):
 
-    sprintNumber=getNextSprintNumber(baseDataFrame)
+
     DataFrameToAppend=baseDataFrame.drop(baseDataFrame.index, inplace=False)
-    AppendedDataFrame = baseDataFrame.append(DataFrameToAppend, ignore_index=True)    
+    AppendedDataFrame = baseDataFrame.append(DataFrameToAppend, ignore_index=True)
     defectosDataFrames=folderPathToDataFrames(defectosFiles)
     casosPruebasDataFrames=folderPathToDataFrames(casosPruebaFiles)
 
     wraggledDefectosDatasets,wraggledCasosPruebasDatasets,FileNames=getWraggledDataFrames(
-        defectosDataFrames,casosPruebasDataFrames,Direccion,sprintNumber
-        )
+        defectosDataFrames,casosPruebasDataFrames,Direccion,sprintNumber)
 
     rowToAggregate=getRowsToAggregate(wraggledDefectosDatasets,wraggledCasosPruebasDatasets,sprintNumber,FileNames)
+    #updatedDataFrameToExcel(rowToAggregate,AppendedDataFrame,baseDataFrame,'consolidado{}.xlsx'.format(Direccion))
+    if Direccion == 'Transformacion':
+        datasetDireccion = updatedDataFrameToExcel(rowToAggregate,AppendedDataFrame,baseDataFrame,transformacionFilePath)
+    elif Direccion == 'Soporte':
+        datasetDireccion = updatedDataFrameToExcelSoporte(rowToAggregate,AppendedDataFrame,baseDataFrame,soporteFilePath)
 
-    updatedDataFrameToExcel(rowToAggregate,AppendedDataFrame,baseDataFrame,'consolidado{}.xlsx'.format(Direccion))
+    return datasetDireccion
+
 
 def startProcessSoporte():
-    #print("Hola..X2")
     Direccion='Soporte'
     baseDataFrame=pd.read_excel(soporteFilePath)
-    process(Direccion,baseDataFrame)
+    sprintNumber=getNextSprintNumber(baseDataFrame)
+    soporteDataset = process(Direccion,baseDataFrame,sprintNumber)
+    soporteDataset['Area']='Soporte'
+    return soporteDataset
 
 def startProcessTransformacion():
-    #print("hola")
     Direccion='Transformacion'
     baseDataFrame=pd.read_excel(transformacionFilePath)
-    process(Direccion,baseDataFrame)
+    sprintNumber=getNextSprintNumber(baseDataFrame)
+    transformacionDataset = process(Direccion,baseDataFrame,sprintNumber)
+    transformacionDataset['Area']='Transformacion'
+    return transformacionDataset
+
+def processFinal():
+    transformacionDataset = startProcessTransformacion()
+    soporteDataset = startProcessSoporte()    
+    sprintNumberSoporte=getNextSprintNumberUpdate(soporteDataset)
+    JoinDataSetFinals(transformacionDataset,soporteDataset,sprintNumberSoporte)
+
+
 
 def getWraggledDataFrames(defectosDataFrames,casosPruebasDataFrames,Direccion,sprintNumber):
 
@@ -57,7 +77,6 @@ def getWraggledDataFrames(defectosDataFrames,casosPruebasDataFrames,Direccion,sp
         defectosDataFrame=defectosDataWrangling(defectosDataFrame,Direccion,sprintNumber)
 
         casosPruebasDataFrame=casosPruebasDataFrames[file]
-        print(defectosFiles[file])
         casosPruebasDataFrame=casosPruebaDataWrangling(casosPruebasDataFrame,Direccion,sprintNumber)
 
         wraggledDefectosDatasets.append(defectosDataFrame)
@@ -92,3 +111,34 @@ def updatedDataFrameToExcel(rowToAggregate,AppendedDataFrame,baseDataFrame,excel
     AppendedDataFrame=AppendedDataFrame.reset_index()
     AppendedDataFrame=AppendedDataFrame.drop('index',axis=1)
     AppendedDataFrame.to_excel(excelFileName,index=False)
+
+    return AppendedDataFrame
+
+def updatedDataFrameToExcelSoporte(rowToAggregate,AppendedDataFrame,baseDataFrame,excelFileName):
+    for i,row in enumerate(rowToAggregate):
+        DataFrameToAppend=baseDataFrame.drop(baseDataFrame.index, inplace=False)
+        DataFrameToAppend.loc[i, :] = row
+        AppendedDataFrame = AppendedDataFrame.append(DataFrameToAppend, ignore_index=True)
+
+
+    AppendedDataFrame=AppendedDataFrame.sort_values(by=['SPRINT'],ascending=False)
+    AppendedDataFrame=AppendedDataFrame.reset_index()
+    AppendedDataFrame=AppendedDataFrame.drop('index',axis=1)
+
+    pittsDataSet=pd.read_excel(pittsFilePath)
+    AppendedDataFrame = AppendedDataFrame.merge(pittsDataSet,left_on='PITTs',right_on='Subdominio',how='inner')
+    AppendedDataFrame['PITTs_x']=AppendedDataFrame['PITTs_y'].tolist()
+    AppendedDataFrame = AppendedDataFrame.drop(columns=['PITTs_y','Subdominio'])
+    AppendedDataFrame = AppendedDataFrame.sort_values(by=['SPRINT'],ascending=False,)
+    AppendedDataFrame = AppendedDataFrame.rename(columns={'PITTs_x':'PITTs'})
+
+    AppendedDataFrame.to_excel(excelFileName,index=False)
+
+    return AppendedDataFrame
+
+def JoinDataSetFinals(transformacionDataset,soporteDataset,sprintNumber):
+    datasetJoined =  transformacionDataset.append(soporteDataset)
+    pathToExport='consolidado Sprint{}.xlsx'.format(sprintNumber)
+    pathFinal=os.path.join(resourcesFiles,pathToExport)
+    datasetJoined.to_excel(pathFinal,index=False)
+    print('exportado '+pathToExport)

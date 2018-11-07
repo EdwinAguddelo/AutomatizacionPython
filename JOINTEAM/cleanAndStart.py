@@ -64,7 +64,7 @@ def changeNameColTeamDef(dtframesArray):
 
 def Deletecol(dtframesArray):
         for i,dtf in enumerate(dtframesArray):
-            dtframesArray[i]=dtframesArray[i].drop('Detected By',axis=1)
+            dtframesArray[i]=dtframesArray[i].drop(columns=['Detected By'])
         return dtframesArray
 
 def exportarAexcel(dtfArray,filepath,shtName):

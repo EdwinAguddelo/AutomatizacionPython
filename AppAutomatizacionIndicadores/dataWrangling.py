@@ -2,7 +2,7 @@
 from cleaners import *
 
 def defectosDataWrangling(defectosDataset,Direccion,sprintNumber):
-    
+
     defectosDataset=getDummiesFromDefectos(defectosDataset)
     defectosDataset=cleanDefectosDataFrame(defectosDataset)
 
@@ -18,14 +18,11 @@ def defectosDataWrangling(defectosDataset,Direccion,sprintNumber):
 
 def casosPruebaDataWrangling(casosPruebasDataset,Direccion,sprintNumber):
 
-    casosPruebasDataset=cleanCasosPruebaDataFrame(casosPruebasDataset,Direccion)
-    # casosPruebasDataset=casosPruebasDataset.groupby(['Detected By']).get_group(Direccion)
-    # casosPruebasDataset=casosPruebasDataset.groupby(['SPRINT']).get_group('Sprint'+str(sprintNumber))   
-    # casosPruebasDataset=casosPruebasDataset.groupby(['REL_NAME']).sum()
+    casosPruebasDataset=cleanCasosPruebaDataFrame(casosPruebasDataset,Direccion)    
 
     try:
         casosPruebasDataset=casosPruebasDataset.groupby(['Detected By']).get_group(Direccion)
-        casosPruebasDataset=casosPruebasDataset.groupby(['SPRINT']).get_group('Sprint'+str(sprintNumber))   
+        casosPruebasDataset=casosPruebasDataset.groupby(['SPRINT']).get_group('Sprint'+str(sprintNumber))
         casosPruebasDataset=casosPruebasDataset.groupby(['REL_NAME']).sum()
     except:
         casosPruebasDataset=casosPruebasDataset.groupby(['REL_NAME']).sum()
