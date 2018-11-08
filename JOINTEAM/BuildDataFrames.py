@@ -23,6 +23,6 @@ def  buildDtf(files,shtName):
 def eliminateFields(dataframesDefectos):
     arrayDefectosFiles = []
     for dtFrame in dataframesDefectos:
-        dtFrame = dtFrame.loc[:,['Application','Automatic Defect','Business Impact','Defect Type','Detected in Cycle','Detected in Release','Detected By']]
+        dtFrame = dtFrame.loc[:,['Application','Defect ID','Automatic Defect','Business Impact','Defect Type','Detected in Cycle','Detected in Release','Detected By']]
         arrayDefectosFiles.append(dtFrame)
     return arrayDefectosFiles
