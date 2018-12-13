@@ -6,7 +6,7 @@ class DesignStart():
         self.regresion=path.regresionPathFile
         self.soporte=path.soportePathFile
 
-        self.regresionDT = buildDtf(self.regresion)
+        self.regresionDT = buildDtfS(self.regresion)
         self.soporteDT = buildDtf(self.soporte)
 
     def getfileRegresion(self):

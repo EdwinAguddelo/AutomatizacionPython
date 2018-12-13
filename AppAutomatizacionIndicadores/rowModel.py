@@ -27,10 +27,10 @@ class TransformacionRow(object):
         self.ImpactoMedio=feed['ImpactoMedio']
         self.ImpactoBajo=feed['ImpactoBajo']
 
-        self.SPRINT2='({})'.format(self.SPRINT)
+        #self.SPRINT2='({})'.format(self.SPRINT)
 
     def getRow(self):
-        return [self.Anho,self.SPRINT,self.PITTs,self.Aplicacion,self.TxE2Eobjetivo,self.TxE2EActivas,self.CoberturaE2E,self.TxRegobjetivo,self.TxRegActivas,self.CoberturaReg,self.CPManuales,self.CPAutomáticos,self.CPTotales,self.DefectosManuales,self.DefectosAutomáticos,self.DefectosTotales,self.ImpactoAlto,self.ImpactoMedio,self.ImpactoBajo,self.SPRINT2]
+        return [self.Anho,self.SPRINT,self.PITTs,self.Aplicacion,self.TxE2Eobjetivo,self.TxE2EActivas,self.CoberturaE2E,self.TxRegobjetivo,self.TxRegActivas,self.CoberturaReg,self.CPManuales,self.CPAutomáticos,self.CPTotales,self.DefectosManuales,self.DefectosAutomáticos,self.DefectosTotales,self.ImpactoAlto,self.ImpactoMedio,self.ImpactoBajo]
 
 
 def rowFeeder(releaseName,defectosSumaDataFrame,casosPruebaSumaDataSet):
