@@ -10,14 +10,14 @@ from dataWrangling import defectosDataWrangling,casosPruebaDataWrangling
 global defectosFiles,casosPruebaFiles,transformacionFilePath,soporteFilePath
 
 def pathConstructor(paths):
-    global defectosFiles,casosPruebaFiles,transformacionFilePath,soporteFilePath,resourcesFiles,pittsFilePath
+    global defectosFiles,casosPruebaFiles,transformacionFilePath,soporteFilePath,resourcesFiles,pittsFilePath,pittsDataSet
     defectosFiles=paths.defectosFiles
     casosPruebaFiles=paths.casosPruebaFiles
     transformacionFilePath=paths.transformacionFilePath
     soporteFilePath=paths.soporteFilePath
     resourcesFiles = paths.resourcesPath
     pittsFilePath = paths.pittsFilePath
-
+    pittsDataSet = pd.read_excel(pittsFilePath)
 def process(Direccion,baseDataFrame,sprintNumber):
 
 
@@ -125,7 +125,7 @@ def updatedDataFrameToExcelSoporte(rowToAggregate,AppendedDataFrame,baseDataFram
     AppendedDataFrame=AppendedDataFrame.reset_index()
     AppendedDataFrame=AppendedDataFrame.drop('index',axis=1)
 
-    pittsDataSet=pd.read_excel(pittsFilePath)
+    #pittsDataSet=pd.read_excel(pittsFilePath)
     AppendedDataFrame = AppendedDataFrame.merge(pittsDataSet,left_on='PITTs',right_on='Subdominio',how='inner')
     AppendedDataFrame['PITTs_x']=AppendedDataFrame['PITTs_y'].tolist()
     AppendedDataFrame = AppendedDataFrame.drop(columns=['PITTs_y','Subdominio'])
@@ -136,9 +136,92 @@ def updatedDataFrameToExcelSoporte(rowToAggregate,AppendedDataFrame,baseDataFram
 
     return AppendedDataFrame
 
+def cleanColumns(dataFrameConsolidado):
+    dataFrameConsolidado = dataFrameConsolidado.fillna(0)
+    dataFrameConsolidado['PITTs'] = dataFrameConsolidado['PITTs'].str.upper()
+    dataFrameConsolidado['Aplicación '] = dataFrameConsolidado['Aplicación '].str.upper()
+    return dataFrameConsolidado
+
+def addPittsTransformacion(dataFrameConsolidado):
+    consolidado = cleanColumns(dataFrameConsolidado)
+    dataFrameFiltredByTransformacion = consolidado[consolidado['Area'] == 'Transformacion']
+    dataTransformacion = dataFrameFiltredByTransformacion.merge(dataFramePitts,left_on = 'PITTs',right_on = 'Subdominio',how = 'inner')
+    dataTransformacion['PITTs_x'] = dataTransformacion['PITTs_y'].tolist()
+    dataTransformacion = dataTransformacion.drop(columns = ['PITTs_y','Subdominio'])
+    dataTransformacion = dataTransformacion.sort_values(by = ['SPRINT'],ascending = False)
+    dataTransformacion = dataTransformacion.rename(columns = {'PITTs_x':'PITTs'})
+    return dataTransformacion
+
+def separateApps(dataSprint):
+    aplicacion = dataSprint['Aplicación ']
+    noSerepitenApps = []
+    seRepiten = []
+    for app in aplicacion:
+        if app not in noSerepitenApps:
+            noSerepitenApps.append(app)
+        else:
+            seRepiten.append(app)
+            noSerepitenApps.remove(app)
+    return seRepiten,noSerepitenApps
+
+def addAppsNoRepeted(noSerepitenApps,dataSprint):
+    consolidado = pd.DataFrame(columns=['Año','SPRINT','PITTs','Aplicación ','Tx E2E objetivo','Tx E2E Activas','% Cobertura E2E','Tx Reg objetivo','Tx Reg Activas','% Cobertura Reg','CP Manuales','CP Automáticos','CP Totales','Defectos Manuales','Defectos Automáticos','Defectos Totales','Impacto\nAlto','Impacto\nMedio','Impacto\nBajo','Area'])
+
+    for apps in noSerepitenApps:
+        dataFrameBase = dataSprint[dataSprint['Aplicación '] == apps]
+        consolidado = consolidado.append(dataFrameBase, ignore_index=True,sort = False)
+    return consolidado
+
+def toListRowsCouple(seRepiten,dataSprint):
+    appsList = []
+    for app in seRepiten:
+        dataFrameRows = dataSprint[dataSprint['Aplicación '] == app]
+        appsList.append(dataFrameRows)
+    return appsList
+
+def consolidateRepeted(consolidado,appsList):
+    dataGrupos = pd.DataFrame(columns = ['Año','SPRINT','PITTs','Aplicación ','Tx E2E objetivo',
+                                       'Tx E2E Activas','% Cobertura E2E','Tx Reg objetivo','Tx Reg Activas',
+                                       '% Cobertura Reg','CP Manuales','CP Automáticos','CP Totales',
+                                       'Defectos Manuales','Defectos Automáticos','Defectos Totales',
+                                       'Impacto\nAlto','Impacto\nMedio','Impacto\nBajo','Area'])
+    for group in appsList:
+        dataagrupada = group.loc[:,'Tx E2E objetivo':'Impacto\nBajo']
+        dataSumada  = dataagrupada.sum()
+
+        dataGrupos.at[0,'Año'] = max(group['Año'])
+        dataGrupos.at[0,'SPRINT'] = max(group['SPRINT'])
+        dataGrupos.at[0,'PITTs'] = max(group['PITTs'])
+        dataGrupos.at[0,'Aplicación '] = max(group['Aplicación '])
+        dataGrupos.at[0,'Tx E2E objetivo':'Impacto\nBajo'] = dataSumada
+        dataGrupos.at[0,'Area'] = 'juntos'
+        consolidado = consolidado.append(dataGrupos,ignore_index = True, sort = False)
+    return consolidado
+
+def consolidateData(datasetJoined):
+    transformaciondata = addPittsTransformacion(datasetJoined)
+    dataFrameFiltredBySoporte = datasetJoined[datasetJoined['Area'] == 'Soporte']
+
+    Sprint = getNextSprintNumberUpdate(datasetJoined)
+
+    dataToAppended = datasetJoined[datasetJoined['SPRINT'] < Sprint]
+    dataSprint = datasetJoined[datasetJoined['SPRINT'] == Sprint]
+
+    seRepiten,noSeRepiten = separateApps(dataSprint)
+    consolidado = addAppsNoRepeted(noSeRepiten,dataSprint)
+    appsList = toListRowsCouple(seRepiten,dataSprint)
+    consolidadoFinal = consolidateRepeted(consolidado,appsList)
+    dataToAppended = dataToAppended.append(consolidadoFinal,ignore_index = True, sort = False)
+    dataToAppended = dataToAppended.sort_values(by = ['SPRINT'],ascending = False)
+    return dataToAppended
+
+
+
+
 def JoinDataSetFinals(transformacionDataset,soporteDataset,sprintNumber):
     datasetJoined =  transformacionDataset.append(soporteDataset)
     pathToExport='consolidado Sprint{}.xlsx'.format(sprintNumber)
     pathFinal=os.path.join(resourcesFiles,pathToExport)
-    datasetJoined.to_excel(pathFinal,index=False)jijijij
+    dataToAppended = consolidateData(datasetJoined)
+    
     print('exportado '+pathToExport)
