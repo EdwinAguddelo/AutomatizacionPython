@@ -223,5 +223,5 @@ def JoinDataSetFinals(transformacionDataset,soporteDataset,sprintNumber):
     pathToExport='consolidado Sprint{}.xlsx'.format(sprintNumber)
     pathFinal=os.path.join(resourcesFiles,pathToExport)
     dataToAppended = consolidateData(datasetJoined)
-    
+    dataToAppended.to_excel(pathFinal,index=False)    
     print('exportado '+pathToExport)
