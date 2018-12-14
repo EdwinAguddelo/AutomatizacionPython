@@ -145,7 +145,7 @@ def cleanColumns(dataFrameConsolidado):
 def addPittsTransformacion(dataFrameConsolidado):
     consolidado = cleanColumns(dataFrameConsolidado)
     dataFrameFiltredByTransformacion = consolidado[consolidado['Area'] == 'Transformacion']
-    dataTransformacion = dataFrameFiltredByTransformacion.merge(dataFramePitts,left_on = 'PITTs',right_on = 'Subdominio',how = 'inner')
+    dataTransformacion = dataFrameFiltredByTransformacion.merge(pittsDataSet,left_on = 'PITTs',right_on = 'Subdominio',how = 'inner')
     dataTransformacion['PITTs_x'] = dataTransformacion['PITTs_y'].tolist()
     dataTransformacion = dataTransformacion.drop(columns = ['PITTs_y','Subdominio'])
     dataTransformacion = dataTransformacion.sort_values(by = ['SPRINT'],ascending = False)
@@ -223,5 +223,5 @@ def JoinDataSetFinals(transformacionDataset,soporteDataset,sprintNumber):
     pathToExport='consolidado Sprint{}.xlsx'.format(sprintNumber)
     pathFinal=os.path.join(resourcesFiles,pathToExport)
     dataToAppended = consolidateData(datasetJoined)
-    dataToAppended.to_excel(pathFinal,index=False)    
+    dataToAppended.to_excel(pathFinal,index=False)
     print('exportado '+pathToExport)
