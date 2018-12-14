@@ -57,7 +57,7 @@ def startProcessTransformacion():
 
 def processFinal():
     transformacionDataset = startProcessTransformacion()
-    soporteDataset = startProcessSoporte()    
+    soporteDataset = startProcessSoporte()
     sprintNumberSoporte=getNextSprintNumberUpdate(soporteDataset)
     JoinDataSetFinals(transformacionDataset,soporteDataset,sprintNumberSoporte)
 
@@ -140,5 +140,5 @@ def JoinDataSetFinals(transformacionDataset,soporteDataset,sprintNumber):
     datasetJoined =  transformacionDataset.append(soporteDataset)
     pathToExport='consolidado Sprint{}.xlsx'.format(sprintNumber)
     pathFinal=os.path.join(resourcesFiles,pathToExport)
-    datasetJoined.to_excel(pathFinal,index=False)
+    datasetJoined.to_excel(pathFinal,index=False)jijijij
     print('exportado '+pathToExport)
