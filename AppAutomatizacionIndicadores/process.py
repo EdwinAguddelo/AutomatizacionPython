@@ -142,10 +142,12 @@ def cleanColumns(dataFrameConsolidado):
     dataFrameConsolidado['Aplicación '] = dataFrameConsolidado['Aplicación '].str.upper()
     return dataFrameConsolidado
 
-def addPittsTransformacion(dataFrameConsolidado):
+def addPittsTransformacion(dataFrameConsolidado,sprint):
     consolidado = cleanColumns(dataFrameConsolidado)
     dataFrameFiltredByTransformacion = consolidado[consolidado['Area'] == 'Transformacion']
+    dataFrameFiltredByTransformacion = dataFrameFiltredByTransformacion[dataFrameFiltredByTransformacion['SPRINT'] == sprint]
     dataTransformacion = dataFrameFiltredByTransformacion.merge(pittsDataSet,left_on = 'PITTs',right_on = 'Subdominio',how = 'inner')
+    print(pittsDataSet)
     dataTransformacion['PITTs_x'] = dataTransformacion['PITTs_y'].tolist()
     dataTransformacion = dataTransformacion.drop(columns = ['PITTs_y','Subdominio'])
     dataTransformacion = dataTransformacion.sort_values(by = ['SPRINT'],ascending = False)
@@ -199,13 +201,15 @@ def consolidateRepeted(consolidado,appsList):
     return consolidado
 
 def consolidateData(datasetJoined):
-    transformaciondata = addPittsTransformacion(datasetJoined)
-    dataFrameFiltredBySoporte = datasetJoined[datasetJoined['Area'] == 'Soporte']
-
     Sprint = getNextSprintNumberUpdate(datasetJoined)
 
+    transformaciondata = addPittsTransformacion(datasetJoined,Sprint)
+    dataFrameFiltredBySoporte = datasetJoined[datasetJoined['Area'] == 'Soporte']
+    dataSprint = transformaciondata.append(dataFrameFiltredBySoporte,ignore_index = True, sort = False)
+
     dataToAppended = datasetJoined[datasetJoined['SPRINT'] < Sprint]
-    dataSprint = datasetJoined[datasetJoined['SPRINT'] == Sprint]
+    dataToAppended = dataToAppended[dataToAppended['Area'] == 'Soporte']
+    dataSprint = dataSprint[dataSprint['SPRINT'] == Sprint]
 
     seRepiten,noSeRepiten = separateApps(dataSprint)
     consolidado = addAppsNoRepeted(noSeRepiten,dataSprint)
