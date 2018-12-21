@@ -13,3 +13,8 @@ venv
 venv/*
 basura
 *.pyc
+
+
+dist/*dist*.tar*.gz*
+
+joinTeams.egg-info/*joinTeams.egg-info*.txt*.PKG-INFO/*PKG-INFO*
