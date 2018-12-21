@@ -108,9 +108,6 @@ def startProcess(dgs):
 
 
     AppsRepeted,noserepite = findRepetedData(dataSprint)
-    print(len(AppsRepeted))
-    print("-----------------------------------------------")
-    print(len(noserepite))
     consolidadoAppsNoRepetidas = selectDataOfDataFrame(noserepite,dataSprint)
     DataFrameFinal = appendFinalData(AppsRepeted,dataSprint,consolidadoAppsNoRepetidas)
     consolidado = SoporteDataF.append(DataFrameFinal,ignore_index = True, sort = False)
