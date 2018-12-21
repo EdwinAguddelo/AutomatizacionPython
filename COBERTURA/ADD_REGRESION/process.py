@@ -1,8 +1,8 @@
 from datetime import datetime
 import unicodedata
 import pandas as pd
-from DesignStart import *
-from utils import getNextSprintNumber
+from ADD_REGRESION.DesignStart import *
+from ADD_REGRESION.utils import getNextSprintNumber
 
 
 
@@ -35,8 +35,7 @@ def cleanSpaces(SoporteConsolidadoDT):
 
     return SoporteConsolidadoDT
 
-def findRepetedData(SoporteConsolidadoDT,sprintActual):
-    SoporteConsolidadoDT = SoporteConsolidadoDT[SoporteConsolidadoDT['SPRINT'] == sprintActual]
+def findRepetedData(SoporteConsolidadoDT):
     apps = SoporteConsolidadoDT['Aplicación '].tolist()
     noAppsRepeted = []
     serepite =[]
@@ -52,7 +51,7 @@ def findRepetedData(SoporteConsolidadoDT,sprintActual):
             if rapp == app:
                 noAppsRepeted.remove(app)
 
-    return serepite,noAppsRepeted,SoporteConsolidadoDT
+    return serepite,noAppsRepeted
 
 def selectDataOfDataFrame(noSerepitenApps,SoporteFiltradoDT):
     consolidado = pd.DataFrame(columns=['Año','SPRINT','PITTs','Aplicación ','Tx E2E objetivo','Tx E2E Activas','% Cobertura E2E','Tx Reg objetivo','Tx Reg Activas','% Cobertura Reg','CP Manuales','CP Automáticos','CP Totales','Defectos Manuales','Defectos Automáticos','Defectos Totales','Impacto\nAlto','Impacto\nMedio','Impacto\nBajo'])
@@ -103,14 +102,17 @@ def startProcess(dgs):
     RegresionDataF = addYear(Regresionfile)
 
     SoporteDataF = AppendDataFrames(soportefile,RegresionDataF)
+    dataSprint = SoporteDataF[SoporteDataF['SPRINT'] == sprintActual]
     SoporteDataF = cleanSpaces(SoporteDataF)
     SoporteDataF = SoporteDataF[SoporteDataF["SPRINT"] < sprintActual]
 
-    AppsRepeted,noserepite,SoporteFiltradoDT = findRepetedData(SoporteDataF,sprintActual)
-    print(AppsRepeted)
-    print("--------------------------------------------------------------------------------")
-    print(noserepite)
-    consolidadoAppsNoRepetidas = selectDataOfDataFrame(noserepite,SoporteFiltradoDT)
-    DataFrameFinal = appendFinalData(AppsRepeted,SoporteFiltradoDT,consolidadoAppsNoRepetidas)
+
+    AppsRepeted,noserepite = findRepetedData(dataSprint)
+    print(len(AppsRepeted))
+    print("-----------------------------------------------")
+    print(len(noserepite))
+    consolidadoAppsNoRepetidas = selectDataOfDataFrame(noserepite,dataSprint)
+    DataFrameFinal = appendFinalData(AppsRepeted,dataSprint,consolidadoAppsNoRepetidas)
     consolidado = SoporteDataF.append(DataFrameFinal,ignore_index = True, sort = False)
-    exportarAexcel(DataFrameFinal,soporteRute)
+    consolidado = consolidado.sort_values(by=['SPRINT'],ascending=False)
+    exportarAexcel(consolidado,soporteRute)

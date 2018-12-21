@@ -1,4 +1,4 @@
-from readExcel import *
+from ADD_REGRESION.readExcel import *
 
 
 class DesignStart():

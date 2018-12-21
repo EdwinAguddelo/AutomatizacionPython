@@ -1,4 +1,10 @@
 setup.py
+ADD_REGRESION/DesignStart.py
+ADD_REGRESION/InterfaceView.py
+ADD_REGRESION/process.py
+ADD_REGRESION/readExcel.py
+ADD_REGRESION/setupPathFiles.py
+ADD_REGRESION/utils.py
 JOINTEAM/BuildDataFrames.py
 JOINTEAM/Setuppathfiles.py
 JOINTEAM/StartJoin.py

@@ -2,9 +2,14 @@ from tkinter import *
 from tkinter import filedialog
 from process import processFinal,pathConstructor
 from pathFiles import *
+
 import JOINTEAM.Setuppathfiles as Setuppathfiles
 import JOINTEAM.StartJoin as StartJoin
 import JOINTEAM.cleanAndStart as cleanAndStart
+
+import ADD_REGRESION.DesignStart as DesignStart
+import ADD_REGRESION.setupPathFiles as setupPathFiles
+import ADD_REGRESION.process as process
 
 class Application():
     def __init__(self, master):
@@ -37,10 +42,14 @@ class Application():
         path=Setuppathfiles.setupPaths(self.logFilePath.get())
         stj = StartJoin.StartJoins(path)
         cleanAndStart.StartProccessJoin(stj)
-        print("-----------pasa primer stage-----------")
+        print("-----------first stage-----------")
         paths=pathFiles(self.logFilePath.get())
         pathConstructor(paths)
         processFinal()
+        print("---------second stage------------")
+        pat=setupPathFiles.setupPaths(self.logFilePath.get())
+        dgs = DesignStart.DesignStart(pat)
+        process.startProcess(dgs)
 
      else:
         self.logFilePathMessage.set("Seleccione la Carpeta Resources")
