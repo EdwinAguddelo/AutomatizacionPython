@@ -1,5 +1,5 @@
 import pandas as pd
-from StartJoin import *
+from JOINTEAM.StartJoin import *
 
 
 

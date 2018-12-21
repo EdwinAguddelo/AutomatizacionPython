@@ -147,7 +147,6 @@ def addPittsTransformacion(dataFrameConsolidado,sprint):
     dataFrameFiltredByTransformacion = consolidado[consolidado['Area'] == 'Transformacion']
     dataFrameFiltredByTransformacion = dataFrameFiltredByTransformacion[dataFrameFiltredByTransformacion['SPRINT'] == sprint]
     dataTransformacion = dataFrameFiltredByTransformacion.merge(pittsDataSet,left_on = 'PITTs',right_on = 'Subdominio',how = 'inner')
-    print(pittsDataSet)
     dataTransformacion['PITTs_x'] = dataTransformacion['PITTs_y'].tolist()
     dataTransformacion = dataTransformacion.drop(columns = ['PITTs_y','Subdominio'])
     dataTransformacion = dataTransformacion.sort_values(by = ['SPRINT'],ascending = False)
@@ -200,20 +199,28 @@ def consolidateRepeted(consolidado,appsList):
         consolidado = consolidado.append(dataGrupos,ignore_index = True, sort = False)
     return consolidado
 
+def comparate(seRepiten,noSeRepiten):
+    for rapp in seRepiten:
+        for app in noSeRepiten:
+            if rapp == app:
+                noSeRepiten.remove(app)
+    return seRepiten,noSeRepiten
+
+
 def consolidateData(datasetJoined):
     Sprint = getNextSprintNumberUpdate(datasetJoined)
-
     transformaciondata = addPittsTransformacion(datasetJoined,Sprint)
     dataFrameFiltredBySoporte = datasetJoined[datasetJoined['Area'] == 'Soporte']
     dataSprint = transformaciondata.append(dataFrameFiltredBySoporte,ignore_index = True, sort = False)
+    dataSprint['Aplicación '] =  dataSprint['Aplicación '].str.upper()
 
     dataToAppended = datasetJoined[datasetJoined['SPRINT'] < Sprint]
     dataToAppended = dataToAppended[dataToAppended['Area'] == 'Soporte']
     dataSprint = dataSprint[dataSprint['SPRINT'] == Sprint]
-
     seRepiten,noSeRepiten = separateApps(dataSprint)
-    consolidado = addAppsNoRepeted(noSeRepiten,dataSprint)
-    appsList = toListRowsCouple(seRepiten,dataSprint)
+    repetidas,norepetidas = comparate(seRepiten,noSeRepiten)
+    consolidado = addAppsNoRepeted(norepetidas,dataSprint)
+    appsList = toListRowsCouple(repetidas,dataSprint)
     consolidadoFinal = consolidateRepeted(consolidado,appsList)
     dataToAppended = dataToAppended.append(consolidadoFinal,ignore_index = True, sort = False)
     dataToAppended = dataToAppended.sort_values(by = ['SPRINT'],ascending = False)
@@ -224,8 +231,9 @@ def consolidateData(datasetJoined):
 
 def JoinDataSetFinals(transformacionDataset,soporteDataset,sprintNumber):
     datasetJoined =  transformacionDataset.append(soporteDataset)
-    pathToExport='consolidado Sprint{}.xlsx'.format(sprintNumber)
+    pathToExport='consolidado.xlsx'
     pathFinal=os.path.join(resourcesFiles,pathToExport)
     dataToAppended = consolidateData(datasetJoined)
+    del dataToAppended['Area']
     dataToAppended.to_excel(pathFinal,index=False)
     print('exportado '+pathToExport)

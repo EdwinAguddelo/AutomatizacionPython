@@ -1,8 +1,10 @@
 from tkinter import *
 from tkinter import filedialog
-import StartJoin
-import Setuppathfiles
-import cleanAndStart
+import JOINTEAM.StartJoin as StartJoin
+import JOINTEAM.Setuppathfiles as Setuppathfiles
+import JOINTEAM.cleanAndStart as cleanAndStart
+
+
 class Application():
     def __init__(self, master):
         frame = Frame(master,width=3000,height=3000)

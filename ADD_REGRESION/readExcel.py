@@ -9,5 +9,4 @@ def  buildDtfS(files):
         data = data.rename(columns={'Impacto Alto': 'Impacto\nAlto'})
         data = data.rename(columns={'Impacto Medio': 'Impacto\nMedio'})
         data = data.rename(columns={'Impacto Bajo': 'Impacto\nBajo'})
-        print('si cambiaron!!')
         return data

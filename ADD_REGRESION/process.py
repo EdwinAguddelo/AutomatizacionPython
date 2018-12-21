@@ -6,13 +6,14 @@ from utils import getNextSprintNumber
 
 
 
-def addYear(RegresiondataSet):    
+def addYear(RegresiondataSet):
     RegresiondataSet['AÑO'] = datetime.now().year
     columna = RegresiondataSet['AÑO']
     del RegresiondataSet['AÑO']
     del RegresiondataSet['Código de la Aplicación']
     RegresiondataSet['Aplicación '] = RegresiondataSet['Aplicación '].str.upper()
     RegresiondataSet.insert(0,'Año',columna)
+    RegresiondataSet = RegresiondataSet.fillna(0)
 
     return RegresiondataSet
 
@@ -35,7 +36,7 @@ def cleanSpaces(SoporteConsolidadoDT):
     return SoporteConsolidadoDT
 
 def findRepetedData(SoporteConsolidadoDT,sprintActual):
-    SoporteConsolidadoDT = SoporteConsolidadoDT.groupby(['SPRINT']).get_group(sprintActual)
+    SoporteConsolidadoDT = SoporteConsolidadoDT[SoporteConsolidadoDT['SPRINT'] == sprintActual]
     apps = SoporteConsolidadoDT['Aplicación '].tolist()
     noAppsRepeted = []
     serepite =[]
@@ -45,44 +46,46 @@ def findRepetedData(SoporteConsolidadoDT,sprintActual):
             noAppsRepeted.append(app)
         else:
             serepite.append(app)
+            noAppsRepeted.remove(app)
+    for rapp in serepite:
+        for app in noAppsRepeted:
+            if rapp == app:
+                noAppsRepeted.remove(app)
 
-    return serepite,SoporteConsolidadoDT
+    return serepite,noAppsRepeted,SoporteConsolidadoDT
 
-def selectDataOfDataFrame(serepite,SoporteConsolidadoDT):
-    dat=pd.DataFrame(columns=['Año','SPRINT','PITTs','Aplicación ','Tx E2E objetivo','Tx E2E Activas','% Cobertura E2E','Tx Reg objetivo','Tx Reg Activas','% Cobertura Reg','CP Manuales','CP Automáticos','CP Totales','Defectos Manuales','Defectos Automáticos','Defectos Totales','Impacto Alto','Impacto\nMedio','Impacto\nBajo'])
-    SoporteConsolidadoDT = SoporteConsolidadoDT.fillna(0)
-    for i in range(len(serepite)):
-        datasol = SoporteConsolidadoDT[SoporteConsolidadoDT['Aplicación '] == serepite[i]]
-        ElegirColumna = max(datasol.loc[:,('% Cobertura E2E','% Cobertura Reg')])
-        if ElegirColumna ==  '% Cobertura E2E':
-            Elmenor = min(datasol.loc[:,'% Cobertura E2E'])
-            Elmayor = max(datasol.loc[:,'% Cobertura E2E'])
-            if Elmayor == Elmenor:
-                datasol=datasol.drop_duplicates(subset='Aplicación ',keep='first')
-                dat=dat.append(datasol,sort=False)
-            else:
-                datasol = datasol[datasol['% Cobertura E2E'] > Elmenor]
-                dat=dat.append(datasol,sort=False)
-        else:
-            Elmenor = min(datasol.loc[:,'% Cobertura Reg'])
-            Elmayor = max(datasol.loc[:,'% Cobertura Reg'])
-            if Elmayor == Elmenor:
-                datasol=datasol.drop_duplicates(subset='Aplicación ',keep='first')
-                dat=dat.append(datasol,sort=False)
-            else:
-                datasol = datasol[datasol['% Cobertura Reg'] > Elmenor]
-                dat=dat.append(datasol,sort=False)
+def selectDataOfDataFrame(noSerepitenApps,SoporteFiltradoDT):
+    consolidado = pd.DataFrame(columns=['Año','SPRINT','PITTs','Aplicación ','Tx E2E objetivo','Tx E2E Activas','% Cobertura E2E','Tx Reg objetivo','Tx Reg Activas','% Cobertura Reg','CP Manuales','CP Automáticos','CP Totales','Defectos Manuales','Defectos Automáticos','Defectos Totales','Impacto\nAlto','Impacto\nMedio','Impacto\nBajo'])
+    for apps in noSerepitenApps:
+        dataFrameBase = SoporteFiltradoDT[SoporteFiltradoDT['Aplicación '] == apps]
+        consolidado = consolidado.append(dataFrameBase, ignore_index=True,sort = False)
 
-    return dat
+    return consolidado
 
-def appendFinalData(SoporteConsolidadoDT,consolidadoFinalDT,dat,sprintActual):
-    Consolidadofinal = SoporteConsolidadoDT.drop_duplicates(subset = 'Aplicación ', keep = False, inplace = False)
-    Consolidadofinal = Consolidadofinal.append(dat)
-    consolidadoFinalDTf = consolidadoFinalDT[consolidadoFinalDT['SPRINT'] < sprintActual]
-    consolidadoFinalDTf = consolidadoFinalDTf.append(Consolidadofinal)
-    consolidadoFinalDTf = consolidadoFinalDTf.sort_values(by=['SPRINT'],ascending=False)
+def appendFinalData(seRepiten,dataSprint,consolidado):
+    appsList = []
+    for app in seRepiten:
+        dataFrameRows = dataSprint[dataSprint['Aplicación '] == app]
+        appsList.append(dataFrameRows)
 
-    return consolidadoFinalDTf
+
+    dataGrupos = pd.DataFrame(columns = ['Año','SPRINT','PITTs','Aplicación ','Tx E2E objetivo',
+                                       'Tx E2E Activas','% Cobertura E2E','Tx Reg objetivo','Tx Reg Activas',
+                                       '% Cobertura Reg','CP Manuales','CP Automáticos','CP Totales',
+                                       'Defectos Manuales','Defectos Automáticos','Defectos Totales',
+                                       'Impacto\nAlto','Impacto\nMedio','Impacto\nBajo'])
+
+    for group in appsList:
+        dataagrupada = group.loc[:,'Tx E2E objetivo':'Impacto\nBajo']
+        dataSumada  = dataagrupada.sum()
+
+        dataGrupos.at[0,'Año'] = max(group['Año'])
+        dataGrupos.at[0,'SPRINT'] = max(group['SPRINT'])
+        dataGrupos.at[0,'PITTs'] = max(group['PITTs'])
+        dataGrupos.at[0,'Aplicación '] = max(group['Aplicación '])
+        dataGrupos.at[0,'Tx E2E objetivo':'Impacto\nBajo'] = dataSumada
+        consolidado = consolidado.append(dataGrupos,ignore_index = True, sort = False)
+    return consolidado
 
 def exportarAexcel(datasetFinal,filepath):
         datasetFinal.to_excel(filepath,index=False)
@@ -93,14 +96,21 @@ def exportarAexcel(datasetFinal,filepath):
 def startProcess(dgs):
     Regresionfile = dgs.getfileRegresion()
     soportefile = dgs.getfilesSoporteDT()
-    print(soportefile['Aplicación '])
+
     soporteRute = dgs.getSoporteRute()
     sprintActual = getNextSprintNumber(soportefile)
+
     RegresionDataF = addYear(Regresionfile)
+
     SoporteDataF = AppendDataFrames(soportefile,RegresionDataF)
     SoporteDataF = cleanSpaces(SoporteDataF)
-    print('pasó!!')
-    AppsRepeted,SoporteFiltradoDT = findRepetedData(SoporteDataF,sprintActual)
-    dataSelectedToappend = selectDataOfDataFrame(AppsRepeted,SoporteFiltradoDT)
-    DataFrameFinal = appendFinalData(SoporteFiltradoDT,SoporteDataF,dataSelectedToappend,sprintActual)
+    SoporteDataF = SoporteDataF[SoporteDataF["SPRINT"] < sprintActual]
+
+    AppsRepeted,noserepite,SoporteFiltradoDT = findRepetedData(SoporteDataF,sprintActual)
+    print(AppsRepeted)
+    print("--------------------------------------------------------------------------------")
+    print(noserepite)
+    consolidadoAppsNoRepetidas = selectDataOfDataFrame(noserepite,SoporteFiltradoDT)
+    DataFrameFinal = appendFinalData(AppsRepeted,SoporteFiltradoDT,consolidadoAppsNoRepetidas)
+    consolidado = SoporteDataF.append(DataFrameFinal,ignore_index = True, sort = False)
     exportarAexcel(DataFrameFinal,soporteRute)

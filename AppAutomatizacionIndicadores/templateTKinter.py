@@ -2,6 +2,10 @@ from tkinter import *
 from tkinter import filedialog
 from process import processFinal,pathConstructor
 from pathFiles import *
+import JOINTEAM.Setuppathfiles as Setuppathfiles
+import JOINTEAM.StartJoin as StartJoin
+import JOINTEAM.cleanAndStart as cleanAndStart
+
 class Application():
     def __init__(self, master):
         frame = Frame(master,width=3000,height=3000)
@@ -29,6 +33,11 @@ class Application():
 
     def start(self):
      if self.logFilePath.get():
+
+        path=Setuppathfiles.setupPaths(self.logFilePath.get())
+        stj = StartJoin.StartJoins(path)
+        cleanAndStart.StartProccessJoin(stj)
+        print("-----------pasa primer stage-----------")
         paths=pathFiles(self.logFilePath.get())
         pathConstructor(paths)
         processFinal()

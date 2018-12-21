@@ -1,4 +1,4 @@
-from BuildDataFrames import *
+from JOINTEAM.BuildDataFrames import *
 
 
 class StartJoins():
